@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math Master Quiz</title>
+    <style>
+        :root {
+            --primary: #4a90e2;
+            --success: #2ecc71;
+            --error: #e74c3c;
+            --dark: #2c3e50;
+            --light: #f8f9fa;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #eef2f7;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            color: var(--dark);
+        }
+
+        .container {
+            background: white;
+            width: 100%;
+            max-width: 600px;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        h1 { text-align: center; color: var(--primary); margin-top: 0; }
+
+        .setup-section, .quiz-section { display: none; }
+        .active { display: block; }
+
+        .topic-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        button {
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+
+        .btn-topic { background: var(--light); border: 2px solid var(--primary); color: var(--primary); }
+        .btn-topic:hover { background: var(--primary); color: white; }
+        .btn-topic.selected { background: var(--primary); color: white; }
+
+        .btn-start { width: 100%; background: var(--success); color: white; font-size: 1.1rem; margin-top: 10px; }
+
+        .question-card { text-align: center; font-size: 1.5rem; margin: 30px 0; }
+        
+        input[type="text"] {
+            width: 80%;
+            padding: 10px;
+            font-size: 1.2rem;
+            text-align: center;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+
+        .feedback { font-weight: bold; margin-bottom: 15px; height: 24px; }
+        .score-board { display: flex; justify-content: space-between; font-size: 0.9rem; color: #666; }
+
+        .fraction-input-hint { font-size: 0.8rem; color: #888; margin-top: -10px; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Math Master</h1>
+
+    <!-- Setup View -->
+    <div id="setup" class="setup-section active">
+        <p>Choose a topic to practice:</p>
+        <div class="topic-grid">
+            <button class="btn-topic" onclick="setTopic('add')">Addition</button>
+            <button class="btn-topic" onclick="setTopic('sub')">Subtraction</button>
+            <button class="btn-topic" onclick="setTopic('mul')">Multiplication</button>
+            <button class="btn-topic" onclick="setTopic('div')">Division</button>
+            <button class="btn-topic" onclick="setTopic('frac-add')">Fraction Add</button>
+            <button class="btn-topic" onclick="setTopic('frac-mul')">Fraction Mult</button>
+        </div>
+        <button class="btn-start" onclick="startQuiz()">Start Quiz</button>
+    </div>
+
+    <!-- Quiz View -->
+    <div id="quiz" class="quiz-section">
+        <div class="score-board">
+            <span id="topic-label">Topic</span>
+            <span>Score: <span id="score">0</span></span>
+        </div>
+        
+        <div class="question-card" id="question">1 + 1 = ?</div>
+        
+        <div style="text-align: center;">
+            <input type="text" id="answer" placeholder="Your answer" autocomplete="off">
+            <div id="frac-hint" class="fraction-input-hint" style="display:none;">Use / for fractions (e.g., 3/4)</div>
+            <div id="feedback" class="feedback"></div>
+            <button class="btn-start" id="submit-btn" onclick="checkAnswer()">Submit Answer</button>
+            <button style="margin-top:20px; background:#ddd;" onclick="location.reload()">Change Topic</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentTopic = '';
+    let currentAnswer = '';
+    let score = 0;
+
+    function setTopic(topic) {
+        currentTopic = topic;
+        document.querySelectorAll('.btn-topic').forEach(btn => {
+            btn.classList.remove('selected');
+            if(btn.innerText.toLowerCase().includes(topic.split('-')[0])) btn.classList.add('selected');
+        });
+        document.getElementById('frac-hint').style.display = topic.includes('frac') ? 'block' : 'none';
+    }
+
+    function startQuiz() {
+        if (!currentTopic) return alert('Please select a topic!');
+        document.getElementById('setup').classList.remove('active');
+        document.getElementById('quiz').classList.add('active');
+        document.getElementById('topic-label').innerText = currentTopic.toUpperCase();
+        generateQuestion();
+    }
+
+    function generateQuestion() {
+        let qText = '';
+        const num1 = Math.floor(Math.random() * 12) + 1;
+        const num2 = Math.floor(Math.random() * 12) + 1;
+
+        switch(currentTopic) {
+            case 'add':
+                qText = `${num1} + ${num2}`;
+                currentAnswer = (num1 + num2).toString();
+                break;
+            case 'sub':
+                const high = Math.max(num1, num2);
+                const low = Math.min(num1, num2);
+                qText = `${high} - ${low}`;
+                currentAnswer = (high - low).toString();
+                break;
+            case 'mul':
+                qText = `${num1} × ${num2}`;
+                currentAnswer = (num1 * num2).toString();
+                break;
+            case 'div':
+                const product = num1 * num2;
+                qText = `${product} ÷ ${num1}`;
+                currentAnswer = num2.toString();
+                break;
+            case 'frac-add':
+                const den = Math.floor(Math.random() * 5) + 2;
+                const n1 = Math.floor(Math.random() * 4) + 1;
+                const n2 = Math.floor(Math.random() * 4) + 1;
+                qText = `${n1}/${den} + ${n2}/${den}`;
+                currentAnswer = simplifyFraction(n1 + n2, den);
+                break;
+            case 'frac-mul':
+                const fa = [Math.floor(Math.random() * 3) + 1, Math.floor(Math.random() * 4) + 2];
+                const fb = [Math.floor(Math.random() * 3) + 1, Math.floor(Math.random() * 4) + 2];
+                qText = `${fa[0]}/${fa[1]} × ${fb[0]}/${fb[1]}`;
+                currentAnswer = simplifyFraction(fa[0] * fb[0], fa[1] * fb[1]);
+                break;
+        }
+
+        document.getElementById('question').innerText = qText + " = ?";
+        document.getElementById('answer').value = '';
+        document.getElementById('answer').focus();
+    }
+
+    function simplifyFraction(num, den) {
+        if (num % den === 0) return (num / den).toString();
+        const gcd = (a, b) => b ? gcd(b, a % b) : a;
+        const common = gcd(num, den);
+        return `${num/common}/${den/common}`;
+    }
+
+    function checkAnswer() {
+        const userAns = document.getElementById('answer').value.trim();
+        const feedback = document.getElementById('feedback');
+        
+        if (userAns === currentAnswer) {
+            score++;
+            feedback.style.color = 'var(--success)';
+            feedback.innerText = "Correct!";
+            document.getElementById('score').innerText = score;
+            setTimeout(generateQuestion, 1000);
+        } else {
+            feedback.style.color = 'var(--error)';
+            feedback.innerText = `Wrong! Try again or the answer was ${currentAnswer}`;
+        }
+    }
+
+    // Allow "Enter" key to submit
+    document.getElementById('answer').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') checkAnswer();
+    });
+</script>
+
+</body>
+</html>
